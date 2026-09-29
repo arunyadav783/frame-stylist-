@@ -19,22 +19,6 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 503 ಹೈ ಡಿಮ್ಯಾಂಡ್ ಬಂದರೆ ಬ್ಯಾಕಪ್ ಮಾಡೆಲ್‌ಗೆ ಸ್ವಿಚ್ ಆಗುವ ಫಂಕ್ಷನ್
-def generate_content_with_fallback(contents):
-    # ಮೊದಲ ಆದ್ಯತೆ gemini-3.8-flash, ಬ್ಯುಸಿ ಇದ್ದರೆ gemini-2.5-flash
-    models_to_try = ['gemini-3.8-flash', 'gemini-2.5-flash']
-    last_error = None
-    for m in models_to_try:
-        try:
-            return client.models.generate_content(
-                model=m,
-                contents=contents
-            )
-        except Exception as e:
-            last_error = e
-            continue
-    raise last_error
-
 tab1, tab2 = st.tabs([" ಹಂತ 1: ಮುಖದ ವಿಶ್ಲೇಷಣೆ & ಆಯ್ಕೆ", " ಹಂತ 2: ಟ್ರಯಲ್ ಫೋಟೋ ಹೋಲಿಕೆ"])
 
 # ----------------- ಹಂತ 1 -----------------
@@ -42,10 +26,10 @@ with tab1:
     st.subheader("ಗ್ರಾಹಕರ ವಿವರ ಮತ್ತು ಫೋಟೋ")
     col1, col2 = st.columns(2)
     with col1:
-        age = st.number_input("ವಯಸ್ಸು (Age):", min_value=5, max_value=100, value=25)
+        age = st.number_input("ವಯಸ್ಸು (Age):", min_value=5, max_value=100, value=20)
         gender = st.selectbox("ಲಿಂಗ (Gender):", ["ಹೆಣ್ಣು (Female)", "ಗಂಡು (Male)", "ಇತರ (Other)"])
     with col2:
-        profession = st.text_input("ಉದ್ಯೋಗ (Profession):", placeholder="ಉದಾ: Student, Teacher...")
+        profession = st.text_input("ಉದ್ಯೋಗ (Profession):", value="Engineering student")
 
     customer_photo = st.file_uploader("ಗ್ರಾಹಕರ ಫೋಟೋ ಅಪ್ಲೋಡ್ ಮಾಡಿ (Face Photo)", type=["jpg", "png", "jpeg"], key="cust_face")
 
@@ -74,7 +58,10 @@ with tab1:
                     ಮಾಹಿತಿಯನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಕನ್ನಡದಲ್ಲೇ ಬುಲೆಟ್ ಪಾಯಿಂಟ್ಸ್ ರೂಪದಲ್ಲಿ ನೀಡಿ.
                     """
                     
-                    response = generate_content_with_fallback([img, prompt])
+                    response = client.models.generate_content(
+                        model='gemini-3.8-flash',
+                        contents=[img, prompt]
+                    )
                     st.success("ವಿಶ್ಲೇಷಣೆ ಪೂರ್ಣಗೊಂಡಿದೆ!")
                     st.markdown(response.text)
                 except Exception as e:
@@ -113,9 +100,11 @@ with tab2:
                     3. ಕಾರಣವನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಕನ್ನಡದಲ್ಲಿ ತಿಳಿಸಿ.
                     """
                     
-                    response = generate_content_with_fallback(images_payload + [compare_prompt])
+                    response = client.models.generate_content(
+                        model='gemini-3.8-flash',
+                        contents=images_payload + [compare_prompt]
+                    )
                     st.success("ಹೋಲಿಕೆ ಸಿದ್ಧವಾಗಿದೆ!")
                     st.markdown(response.text)
                 except Exception as e:
                     st.error(f"ದೋಷ ಸಂಭವಿಸಿದೆ: {e}")
-
