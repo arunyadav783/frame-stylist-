@@ -3,13 +3,11 @@ import streamlit as st
 from google import genai
 from PIL import Image
 
-# ಪೇಜ್ ಸೆಟಪ್
 st.set_page_config(page_title="Smart Frame Stylist", layout="centered", page_icon="👓")
 
 st.title("👓 Smart Frame Stylist")
 st.caption("AI-ಚಾಲಿತ ಫ್ರೇಮ್ ಶಿಫಾರಸು ಮತ್ತು ಟ್ರಯಲ್ ಅಸಿಸ್ಟೆಂಟ್")
 
-# API Key
 api_key = os.environ.get("GEMINI_API_KEY", "")
 
 if not api_key:
@@ -19,8 +17,23 @@ if not api_key:
     st.warning("ದಯವಿಟ್ಟು ಮುಂದುವರಿಯಲು Google Gemini API Key ನೀಡಿ.")
     st.stop()
 
-# GenAI ಕ್ಲೈಂಟ್ ಆರಂಭ
 client = genai.Client(api_key=api_key)
+
+# 503 ಹೈ ಡಿಮ್ಯಾಂಡ್ ಬಂದರೆ ಬ್ಯಾಕಪ್ ಮಾಡೆಲ್‌ಗೆ ಸ್ವಿಚ್ ಆಗುವ ಫಂಕ್ಷನ್
+def generate_content_with_fallback(contents):
+    # ಮೊದಲ ಆದ್ಯತೆ gemini-3.8-flash, ಬ್ಯುಸಿ ಇದ್ದರೆ gemini-2.5-flash
+    models_to_try = ['gemini-3.8-flash', 'gemini-2.5-flash']
+    last_error = None
+    for m in models_to_try:
+        try:
+            return client.models.generate_content(
+                model=m,
+                contents=contents
+            )
+        except Exception as e:
+            last_error = e
+            continue
+    raise last_error
 
 tab1, tab2 = st.tabs([" ಹಂತ 1: ಮುಖದ ವಿಶ್ಲೇಷಣೆ & ಆಯ್ಕೆ", " ಹಂತ 2: ಟ್ರಯಲ್ ಫೋಟೋ ಹೋಲಿಕೆ"])
 
@@ -61,11 +74,7 @@ with tab1:
                     ಮಾಹಿತಿಯನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಕನ್ನಡದಲ್ಲೇ ಬುಲೆಟ್ ಪಾಯಿಂಟ್ಸ್ ರೂಪದಲ್ಲಿ ನೀಡಿ.
                     """
                     
-                    # ಗೂಗಲ್ ಸೂಚಿಸಿರುವ ಲೇಟೆಸ್ಟ್ ಮಾಡೆಲ್
-                    response = client.models.generate_content(
-                        model='gemini-3.8-flash',
-                        contents=[img, prompt]
-                    )
+                    response = generate_content_with_fallback([img, prompt])
                     st.success("ವಿಶ್ಲೇಷಣೆ ಪೂರ್ಣಗೊಂಡಿದೆ!")
                     st.markdown(response.text)
                 except Exception as e:
@@ -104,11 +113,9 @@ with tab2:
                     3. ಕಾರಣವನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಕನ್ನಡದಲ್ಲಿ ತಿಳಿಸಿ.
                     """
                     
-                    response = client.models.generate_content(
-                        model='gemini-3.8-flash',
-                        contents=images_payload + [compare_prompt]
-                    )
+                    response = generate_content_with_fallback(images_payload + [compare_prompt])
                     st.success("ಹೋಲಿಕೆ ಸಿದ್ಧವಾಗಿದೆ!")
                     st.markdown(response.text)
                 except Exception as e:
                     st.error(f"ದೋಷ ಸಂಭವಿಸಿದೆ: {e}")
+
