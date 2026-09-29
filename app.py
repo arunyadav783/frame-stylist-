@@ -3,14 +3,16 @@ import streamlit as st
 from google import genai
 from PIL import Image
 
+# ಪೇಜ್ ಸೆಟಪ್
 st.set_page_config(page_title="Smart Frame Stylist", layout="centered", page_icon="👓")
 
 st.title("👓 Smart Frame Stylist")
 st.caption("AI-ಚಾಲಿತ ಫ್ರೇಮ್ ಶಿಫಾರಸು ಮತ್ತು ಟ್ರಯಲ್ ಅಸಿಸ್ಟೆಂಟ್")
 
-# API Key ಅನ್ನು Render Environment Variables ನಿಂದ ಪಡೆಯುವುದು
+# Render Environment Variable ನಿಂದ API Key ಪಡೆಯುವುದು
 api_key = os.environ.get("GEMINI_API_KEY", "")
 
+# ಒಂದು ವೇಳೆ Environment Variable ಇಲ್ಲದಿದ್ದರೆ ಸೈಡ್‌ಬಾರ್‌ನಲ್ಲಿ ಕೇಳುತ್ತದೆ
 if not api_key:
     api_key = st.sidebar.text_input("Gemini API Key ನಮೂದಿಸಿ:", type="password")
 
@@ -18,10 +20,13 @@ if not api_key:
     st.warning("ದಯವಿಟ್ಟು ಮುಂದುವರಿಯಲು Google Gemini API Key ನೀಡಿ.")
     st.stop()
 
+# GenAI ಕ್ಲೈಂಟ್ ಆರಂಭ
 client = genai.Client(api_key=api_key)
 
+# ಟ್ಯಾಬ್‌ಗಳು
 tab1, tab2 = st.tabs([" ಹಂತ 1: ಮುಖದ ವಿಶ್ಲೇಷಣೆ & ಆಯ್ಕೆ", " ಹಂತ 2: ಟ್ರಯಲ್ ಫೋಟೋ ಹೋಲಿಕೆ"])
 
+# ----------------- ಹಂತ 1 -----------------
 with tab1:
     st.subheader("ಗ್ರಾಹಕರ ವಿವರ ಮತ್ತು ಫೋಟೋ")
     col1, col2 = st.columns(2)
@@ -65,10 +70,11 @@ with tab1:
                 except Exception as e:
                     st.error(f"ದೋಷ ಸಂಭವಿಸಿದೆ: {e}")
 
+# ----------------- ಹಂತ 2 -----------------
 with tab2:
     st.subheader("ಟ್ರಯಲ್ ಫ್ರೇಮ್‌ಗಳ ಹೋಲಿಕೆ")
     st.write("ಗ್ರಾಹಕರು ವಿವಿಧ ಕನ್ನಡಕಗಳನ್ನು ಹಾಕಿಕೊಂಡಿರುವ 3 ಅಥವಾ 4 ಫೋಟೋಗಳನ್ನು ಒಟ್ಟಿಗೆ ಅಪ್ಲೋಡ್ ಮಾಡಿ.")
-
+    
     trial_photos = st.file_uploader(
         "ಟ್ರಯಲ್ ಫೋಟೋಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ (ಗರಿಷ್ಠ 4):",
         type=["jpg", "png", "jpeg"],
