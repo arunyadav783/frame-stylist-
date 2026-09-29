@@ -3,11 +3,13 @@ import streamlit as st
 from google import genai
 from PIL import Image
 
+# ಪೇಜ್ ಸೆಟಪ್
 st.set_page_config(page_title="Smart Frame Stylist", layout="centered", page_icon="👓")
 
 st.title("👓 Smart Frame Stylist")
 st.caption("AI-ಚಾಲಿತ ಫ್ರೇಮ್ ಶಿಫಾರಸು ಮತ್ತು ಟ್ರಯಲ್ ಅಸಿಸ್ಟೆಂಟ್")
 
+# API Key
 api_key = os.environ.get("GEMINI_API_KEY", "")
 
 if not api_key:
@@ -17,6 +19,7 @@ if not api_key:
     st.warning("ದಯವಿಟ್ಟು ಮುಂದುವರಿಯಲು Google Gemini API Key ನೀಡಿ.")
     st.stop()
 
+# GenAI ಕ್ಲೈಂಟ್ ಆರಂಭ
 client = genai.Client(api_key=api_key)
 
 tab1, tab2 = st.tabs([" ಹಂತ 1: ಮುಖದ ವಿಶ್ಲೇಷಣೆ & ಆಯ್ಕೆ", " ಹಂತ 2: ಟ್ರಯಲ್ ಫೋಟೋ ಹೋಲಿಕೆ"])
@@ -26,15 +29,16 @@ with tab1:
     st.subheader("ಗ್ರಾಹಕರ ವಿವರ ಮತ್ತು ಫೋಟೋ")
     col1, col2 = st.columns(2)
     with col1:
-        age = st.number_input("ವಯಸ್ಸು (Age):", min_value=5, max_value=100, value=20)
+        age = st.number_input("ವಯಸ್ಸು (Age):", min_value=5, max_value=100, value=25)
         gender = st.selectbox("ಲಿಂಗ (Gender):", ["ಹೆಣ್ಣು (Female)", "ಗಂಡು (Male)", "ಇತರ (Other)"])
     with col2:
-        profession = st.text_input("ಉದ್ಯೋಗ (Profession):", placeholder="ಉದಾ: Student, Teacher, Software Engineer...")
+        profession = st.text_input("ಉದ್ಯೋಗ (Profession):", placeholder="ಉದಾ: Student, Teacher...")
 
     customer_photo = st.file_uploader("ಗ್ರಾಹಕರ ಫೋಟೋ ಅಪ್ಲೋಡ್ ಮಾಡಿ (Face Photo)", type=["jpg", "png", "jpeg"], key="cust_face")
 
     if customer_photo:
-        st.image(Image.open(customer_photo), caption="ಅಪ್ಲೋಡ್ ಮಾಡಿದ ಫೋಟೋ", width=250)
+        img_preview = Image.open(customer_photo)
+        st.image(img_preview, caption="ಅಪ್ಲೋಡ್ ಮಾಡಿದ ಫೋಟೋ", width=250)
 
     if st.button("ಫ್ರೇಮ್ ಶಿಫಾರಸುಗಳನ್ನು ಪಡೆಯಿರಿ (Analyze)", type="primary"):
         if not customer_photo:
@@ -57,8 +61,9 @@ with tab1:
                     ಮಾಹಿತಿಯನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಕನ್ನಡದಲ್ಲೇ ಬುಲೆಟ್ ಪಾಯಿಂಟ್ಸ್ ರೂಪದಲ್ಲಿ ನೀಡಿ.
                     """
                     
+                    # ಗೂಗಲ್ ಸೂಚಿಸಿರುವ ಲೇಟೆಸ್ಟ್ ಮಾಡೆಲ್
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.8-flash',
                         contents=[img, prompt]
                     )
                     st.success("ವಿಶ್ಲೇಷಣೆ ಪೂರ್ಣಗೊಂಡಿದೆ!")
@@ -100,7 +105,7 @@ with tab2:
                     """
                     
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.8-flash',
                         contents=images_payload + [compare_prompt]
                     )
                     st.success("ಹೋಲಿಕೆ ಸಿದ್ಧವಾಗಿದೆ!")
