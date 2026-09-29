@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from google import genai
 from PIL import Image
@@ -7,7 +8,9 @@ st.set_page_config(page_title="Smart Frame Stylist", layout="centered", page_ico
 st.title("👓 Smart Frame Stylist")
 st.caption("AI-ಚಾಲಿತ ಫ್ರೇಮ್ ಶಿಫಾರಸು ಮತ್ತು ಟ್ರಯಲ್ ಅಸಿಸ್ಟೆಂಟ್")
 
-api_key = st.secrets.get("GEMINI_API_KEY", "")
+# API Key ಅನ್ನು Render Environment Variables ನಿಂದ ಪಡೆಯುವುದು
+api_key = os.environ.get("GEMINI_API_KEY", "")
+
 if not api_key:
     api_key = st.sidebar.text_input("Gemini API Key ನಮೂದಿಸಿ:", type="password")
 
